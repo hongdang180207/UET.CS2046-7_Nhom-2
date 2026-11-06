@@ -138,9 +138,9 @@ CREATE TABLE IF NOT EXISTS goal_baselines (
 -- 9. Thêm các danh mục ban đầu
 INSERT IGNORE INTO categories (name, type) VALUES
     ('Ăn uống', 'expense'),
-    ('Cà phê/trà sữa', 'expense'),
+    ('Cà phê', 'expense'),
     ('Đi lại', 'expense'),
-    ('Nhà trọ', 'expense'),
+    ('Tiền trọ', 'expense'),
     ('Học tập', 'expense'),
     ('Giải trí', 'expense'),
     ('Mua sắm', 'expense'),
