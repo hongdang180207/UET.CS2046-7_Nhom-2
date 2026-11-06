@@ -35,7 +35,6 @@ class FinanceService:
 
      @classmethod
      def calculate_total_income(cls, transactions, month, year):
-        """Nhiệm vụ 1: Tính tổng thu nhập (có thể lọc theo tháng/năm)."""
         df = cls._prepare_df(transactions)
         if df.empty:
             return 0.0
@@ -46,7 +45,6 @@ class FinanceService:
 
      @classmethod
      def calculate_expense_by_period(cls, transactions, day, month, year ):
-        "Nhiệm vụ 2: Tính tổng chi tiêu theo ngày, tháng, năm."
         df = cls._prepare_df(transactions)
         if df.empty:
             return 0.0
@@ -57,7 +55,6 @@ class FinanceService:
 
      @classmethod
      def get_expense_by_category(cls, transactions, month, year):
-        "Nhiệm vụ 3: Phân loại và thống kê tỷ trọng chi tiêu theo danh mục."
         df = cls._prepare_df(transactions)
         if df.empty:
             return {"total_expense": 0.0, "categories": []}
@@ -97,7 +94,6 @@ class FinanceService:
 
      @classmethod
      def check_budget_status(cls, transactions, budget_limit, month, year):
-        "Nhiệm vụ 5 (Gợi ý bổ sung): Kiểm tra tình trạng ngân sách tháng."
         total_expense = cls.calculate_expense_by_period(transactions, month=month, year=year)
         usage_percent = round((total_expense / budget_limit * 100), 2) if budget_limit > 0 else 0.0
         
@@ -117,7 +113,6 @@ class FinanceService:
 
      @classmethod
      def analyze_spending_trends(cls, transactions):
-        "Nhiệm vụ 6: Phân tích xu hướng chi tiêu qua các tháng bằng Pandas."
         df = cls._prepare_df(transactions)
         exp_df = df[df['type'] == 'expense'].copy()
         if exp_df.empty:
