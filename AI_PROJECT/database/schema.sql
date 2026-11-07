@@ -1,18 +1,18 @@
---1.TẠO DATABASE
+-- 1.TẠO DATABASE
 CREATE DATABASE IF NOT EXISTS chi_tieu_sinh_vien
     CHARACTER SET utf8mb4
     COLLATE utf8mb4_unicode_ci;
---Chọn database
+-- Chọn database
 USE chi_tieu_sinh_vien;
 
---2.NGƯỜI DÙNG
+-- 2.NGƯỜI DÙNG
 CREATE TABLE IF NOT EXISTS users (
     user_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     display_name VARCHAR(100) NOT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
---3.DANH MỤC THU CHI
+-- 3.DANH MỤC THU CHI
 CREATE TABLE IF NOT EXISTS categories (
     category_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
