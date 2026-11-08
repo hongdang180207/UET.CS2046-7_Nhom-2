@@ -1,50 +1,8 @@
-import json
 import os
-from services.ai_service import process_ai_response
+
 from dotenv import load_dotenv
 from google import genai
-
-
-
-# Giả lập dữ liệu do AI trả về
-ai_response = [
-    {
-        "amount": 40000,
-        "category": "Ăn uống",
-        "type": "expense",
-        "description": "Ăn phở",
-        "date": "2026-11-05"
-    },
-    {
-        "amount": 500000,
-        "category": "Khác",
-        "type": "income",
-        "description": "Mẹ chuyển tiền",
-        "date": "2026-11-05"
-    }
-]
-
-
-# Chuyển Python Dictionary thành JSON
-json_data = json.dumps(
-    ai_response,
-    ensure_ascii=False
-)
-
-
-# Gửi dữ liệu đến AI Service để kiểm tra
-result = process_ai_response(json_data)
-
-
-# Hiển thị kết quả
-print("Trạng thái:", result["success"])
-
-print("Thông báo:", result["message"])
-
-print("Các giao dịch hợp lệ:")
-
-for transaction in result["data"]:
-    print(transaction)
+from google.genai import types
 
 # Đọc biến môi trường
 load_dotenv()
@@ -56,7 +14,11 @@ if not API_KEY or not MODEL:
     raise ValueError("Thiếu GEMINI_API_KEY hoặc GEMINI_MODEL")
 
 # Khởi tạo Gemini Client
-client = genai.Client(api_key=API_KEY)
+client = genai.Client(
+    api_key=API_KEY,
+    # HttpOptions.timeout được tính bằng mili giây.
+    http_options=types.HttpOptions(timeout=90000),
+)
 
 
 # Gửi câu hỏi đến Gemini
@@ -64,7 +26,12 @@ def ask_gemini(question):
 
     response = client.models.generate_content(
         model=MODEL,
-        contents=question
+        contents=question,
+        # Giảm thời gian suy luận cho ứng dụng hỏi đáp thông thường.
+        config=types.GenerateContentConfig(
+            thinking_config=types.ThinkingConfig(thinking_level="low"),
+            max_output_tokens=1024,
+        ),
     )
 
     return response.text
@@ -75,11 +42,22 @@ if __name__ == "__main__":
 
     question = input("Bạn muốn hỏi AI điều gì? ")
 
+    if not question.strip():
+        print("Vui lòng nhập câu hỏi trước khi gửi.")
+        raise SystemExit(1)
+
     try:
+        print("Đang gửi câu hỏi đến Gemini... (có thể mất vài giây)")
         result = ask_gemini(question)
 
         print("\nPhản hồi từ Gemini:")
-        print(result)
+        print(result or "Gemini trả về phản hồi trống.")
 
     except Exception as error:
-        print("Đã xảy ra lỗi:", error)
+        message = str(error)
+        if "504" in message or "DEADLINE_EXCEEDED" in message:
+            print("Gemini mất quá nhiều thời gian để xử lý câu hỏi (504).")
+            print("Hãy chờ một chút rồi chạy lại; câu hỏi ngắn hơn thường phản hồi nhanh hơn.")
+            print("Nếu lỗi lặp lại, kiểm tra trạng thái dịch vụ Gemini và kết nối mạng.")
+        else:
+            print("Không thể nhận phản hồi từ Gemini:", message)
