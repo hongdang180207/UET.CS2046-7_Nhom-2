@@ -1,4 +1,38 @@
 import json
+import os
+
+from dotenv import load_dotenv
+from google import genai
+from google.genai import types
+
+from prompts.transaction_prompt import SYSTEM_INSTRUCTION
+
+
+load_dotenv()
+
+
+def extract_with_gemini(user_input):
+    """Trích xuất giao dịch từ nội dung người dùng bằng Gemini."""
+    api_key = os.getenv("GEMINI_API_KEY")
+    model = os.getenv("GEMINI_MODEL")
+
+    if not api_key or not model:
+        raise ValueError("Thiếu GEMINI_API_KEY hoặc GEMINI_MODEL trong cấu hình môi trường")
+
+    client = genai.Client(api_key=api_key)
+    response = client.models.generate_content(
+        model=model,
+        contents=user_input,
+        config=types.GenerateContentConfig(
+            system_instruction=SYSTEM_INSTRUCTION,
+            temperature=0.2,
+        ),
+    )
+
+    if not response.text:
+        raise RuntimeError("Gemini không trả về nội dung.")
+
+    return response.text
 
 
 def validate_transaction(transaction):
