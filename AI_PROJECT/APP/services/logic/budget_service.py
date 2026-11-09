@@ -1,5 +1,5 @@
 from typing import Any
-from services.finance_service import FinanceService
+from services.logic import finance_service
 
 
 class BudgetService:
@@ -60,7 +60,7 @@ class BudgetService:
         warning_threshold: float = 80.0,
     ) -> list[dict[str, Any]]:
        
-        cat_summary = FinanceService.get_expense_by_category(transactions, month, year)
+        cat_summary = finance_service.get_expense_by_category(transactions, month, year)
         spent_map = {
             item["category"]: item["amount"]
             for item in cat_summary.get("categories", [])
