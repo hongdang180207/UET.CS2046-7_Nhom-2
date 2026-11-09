@@ -22,8 +22,15 @@ if __name__ == "__main__":
         print("ĐÃ NHẬN CÂU HỎI XIN VUI LÒNG CHỜ TRONG GIÂY LÁT (có thể mất vài giây)")
         result = extract_with_gemini(question)
 
-        print("\nPhản hồi từ Gemini:")
-        print(result)
+        print("\nKẾT QUẢ TRÍCH XUẤT:")
+        for transaction in result.transactions:
+            print("-------------------")
+            print("Số tiền:", transaction.amount)
+            print("Danh mục:", transaction.category)
+            print("Loại:", transaction.type)
+            print("Mô tả:", transaction.description)
+            print("Ngày:", transaction.date)
+            print("Ngày mặc định:", transaction.date_is_default)
 
     except Exception as error:
         message = str(error)

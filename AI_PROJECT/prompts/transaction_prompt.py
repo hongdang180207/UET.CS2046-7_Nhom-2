@@ -12,13 +12,10 @@ Các trường cần xác định:
 - date: Ngày giao dịch.
 
 Các danh mục được phép:
-- Ăn uống
-- Di chuyển
-- Học tập
-- Giải trí
-- Mua sắm
-- Nhà ở
-- Khác
+- Chi tiêu: Ăn uống, Cà phê, Đi lại, Tiền trọ, Học tập, Giải trí,
+  Mua sắm, Sức khỏe, Khác.
+- Thu nhập: Gia đình gửi, Làm thêm, Học bổng, Khác.
+- Chọn category đúng theo danh sách và đúng với type. Không tự tạo tên danh mục.
 
 Quy tắc:
 
@@ -32,5 +29,10 @@ Quy tắc:
 6. Nếu người dùng không cung cấp ngày,
    sử dụng ngày hiện tại làm ngày mặc định
    và đánh dấu rõ đây là ngày mặc định.
-7. Giữ nguyên ý nghĩa câu nhập của người dùng.
+7. Trả kết quả theo cấu trúc JSON có khóa cấp cao nhất `transactions`,
+   chứa danh sách giao dịch. Mỗi giao dịch gồm amount, category, type,
+   description, date và date_is_default.
+8. date dùng định dạng YYYY-MM-DD. Nếu không có ngày, điền ngày hiện tại
+   và đặt date_is_default là true; nếu người dùng cung cấp ngày, đặt false.
+9. Giữ nguyên ý nghĩa câu nhập của người dùng.
 """
