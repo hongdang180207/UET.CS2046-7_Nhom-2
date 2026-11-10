@@ -2,7 +2,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 
 
 # 1. Cấu hình trang
@@ -189,45 +189,54 @@ elif selected_page == "Transactions":
     # 2. Form thêm giao dịch
     with st.expander("➕ Thêm giao dịch mới", expanded=False):
 
+        # Chọn loại giao dịch bên ngoài Form
+        transaction_type = st.selectbox(
+            "Loại giao dịch",
+            ["Chi tiêu", "Thu nhập"],
+            key="new_transaction_type"
+        )
+
+        # Danh mục thay đổi theo loại giao dịch
+        if transaction_type == "Chi tiêu":
+            category_options = [
+                "Ăn uống",
+                "Đi lại",
+                "Học tập",
+                "Giải trí",
+                "Mua sắm",
+                "Khác"
+            ]
+        else:
+            category_options = [
+                "Lương",
+                "Làm thêm",
+                "Thưởng",
+                "Thu nhập khác"
+            ]
+
         with st.form("add_transaction_form"):
 
-            col1, col2 = st.columns(2)
+            transaction_name = st.text_input(
+                "Tên giao dịch",
+                placeholder="Ví dụ: Ăn sáng, mua sách..."
+            )
 
-            with col1:
-                transaction_name = st.text_input(
-                    "Tên giao dịch",
-                    placeholder="Ví dụ: Ăn sáng, mua sách..."
-                )
+            transaction_amount = st.number_input(
+                "Số tiền (VND)",
+                min_value=0,
+                step=1000
+            )
 
-                transaction_amount = st.number_input(
-                    "Số tiền (VND)",
-                    min_value=0,
-                    step=1000
-                )
+            transaction_date = st.date_input(
+                "Ngày giao dịch",
+                value=date.today()
+            )
 
-                transaction_date = st.date_input(
-                    "Ngày giao dịch",
-                    value=date.today()
-                )
-
-            with col2:
-                transaction_type = st.selectbox(
-                    "Loại giao dịch",
-                    ["Chi tiêu", "Thu nhập"]
-                )
-
-                transaction_category = st.selectbox(
-                    "Danh mục",
-                    [
-                        "Ăn uống",
-                        "Đi lại",
-                        "Học tập",
-                        "Giải trí",
-                        "Mua sắm",
-                        "Khác",
-                        "Thu nhập"
-                    ]
-                )
+            transaction_category = st.selectbox(
+                "Danh mục",
+                category_options,
+                key="new_transaction_category"
+            )
 
             submitted = st.form_submit_button(
                 "Thêm giao dịch",
@@ -260,7 +269,7 @@ elif selected_page == "Transactions":
     # 3. Lấy dữ liệu giao dịch mới nhất
     transaction_data = st.session_state.transactions.copy()
 
-    # 2. Tìm kiếm và lọc giao dịch
+    # 4. Tìm kiếm và lọc giao dịch
     st.subheader("Lịch sử giao dịch")
 
     filter_col1, filter_col2, filter_col3 = st.columns(3)
@@ -286,7 +295,7 @@ elif selected_page == "Transactions":
             categories
         )
 
-    # 3. Áp dụng bộ lọc
+    # 5. Áp dụng bộ lọc
     filtered_data = transaction_data.copy()
 
     if search_text:
@@ -308,14 +317,14 @@ elif selected_page == "Transactions":
             filtered_data["Danh mục"] == selected_category
         ]
 
-    # 4. Định dạng dữ liệu để hiển thị
+    # 6. Định dạng dữ liệu để hiển thị
     display_data = filtered_data.copy()
 
     display_data["Số tiền"] = display_data["Số tiền"].map(
         lambda amount: f"{amount:,.0f} đ".replace(",", ".")
     )
 
-    # 5. Hiển thị kết quả
+    # 7. Hiển thị kết quả
     st.dataframe(
         display_data,
         width="stretch",
@@ -323,6 +332,149 @@ elif selected_page == "Transactions":
     )
 
     st.caption(f"Tìm thấy {len(filtered_data)} giao dịch.")
+    # 8. Xóa giao dịch
+    with st.expander("🗑️ Xóa giao dịch"):
+
+        if filtered_data.empty:
+            st.info("Không có giao dịch để xóa.")
+        else:
+            transaction_indices = filtered_data.index.tolist()
+
+            selected_transaction_index = st.selectbox(
+                "Chọn giao dịch cần xóa",
+                transaction_indices,
+                format_func=lambda index: (
+                    f"{transaction_data.loc[index, 'Ngày']} - "
+                    f"{transaction_data.loc[index, 'Tên giao dịch']} - "
+                    f"{transaction_data.loc[index, 'Số tiền']:,} đ"
+                )
+            )
+
+            if st.button("Xóa giao dịch", type="primary"):
+                st.session_state.transactions = (
+                    st.session_state.transactions.drop(
+                        selected_transaction_index
+                    ).reset_index(drop=True)
+                )
+
+                st.success("Đã xóa giao dịch thành công!")
+                st.rerun()
+                # 9. Chỉnh sửa giao dịch
+    with st.expander("✏️ Chỉnh sửa giao dịch"):
+
+        if transaction_data.empty:
+            st.info("Chưa có giao dịch để chỉnh sửa.")
+
+        else:
+            transaction_indices = transaction_data.index.tolist()
+
+            selected_edit_index = st.selectbox(
+                "Chọn giao dịch cần chỉnh sửa",
+                transaction_indices,
+                format_func=lambda index: (
+                    f"{transaction_data.loc[index, 'Ngày']} - "
+                    f"{transaction_data.loc[index, 'Tên giao dịch']}"
+                ),
+                key="edit_transaction_selector"
+            )
+
+            # Lấy thông tin giao dịch đang chọn
+            current_transaction = st.session_state.transactions.loc[
+                selected_edit_index
+            ]
+
+            st.write("**Chỉnh sửa thông tin giao dịch**")
+
+            # 1. Tên giao dịch
+            edit_name = st.text_input(
+                "Tên giao dịch",
+                value=current_transaction["Tên giao dịch"],
+                key=f"edit_name_{selected_edit_index}"
+            )
+
+            # 2. Số tiền
+            edit_amount = st.number_input(
+                "Số tiền (VND)",
+                min_value=0,
+                value=int(current_transaction["Số tiền"]),
+                step=1000,
+                key=f"edit_amount_{selected_edit_index}"
+            )
+
+            # 3. Ngày giao dịch
+            edit_date = st.date_input(
+                "Ngày giao dịch",
+                value=datetime.strptime(
+                    current_transaction["Ngày"], "%d/%m/%Y"
+                ).date(),
+                key=f"edit_date_{selected_edit_index}"
+            )
+
+            # 4. Loại giao dịch
+            edit_type = st.selectbox(
+                "Loại giao dịch",
+                ["Chi tiêu", "Thu nhập"],
+                index=["Chi tiêu", "Thu nhập"].index(
+                    current_transaction["Loại"]
+                ),
+                key=f"edit_type_{selected_edit_index}"
+            )
+
+            # 5. Danh mục thay đổi theo loại giao dịch
+            if edit_type == "Chi tiêu":
+                edit_category_options = [
+                    "Ăn uống", "Đi lại", "Học tập",
+                    "Giải trí", "Mua sắm", "Khác"
+                ]
+            else:
+                edit_category_options = [
+                    "Lương", "Làm thêm", "Thưởng", "Thu nhập khác"
+                ]
+
+            current_category = current_transaction["Danh mục"]
+
+            if current_category not in edit_category_options:
+                edit_category_options.append(current_category)
+
+            edit_category = st.selectbox(
+                "Danh mục",
+                edit_category_options,
+                index=edit_category_options.index(current_category),
+                key=f"edit_category_{selected_edit_index}_{edit_type}"
+            )
+
+            # 6. Lưu thay đổi
+            if st.button("Lưu thay đổi", type="primary"):
+
+                if not edit_name.strip():
+                    st.error("Tên giao dịch không được để trống.")
+
+                elif edit_amount <= 0:
+                    st.error("Số tiền phải lớn hơn 0.")
+
+                else:
+                    st.session_state.transactions.loc[
+                        selected_edit_index, "Tên giao dịch"
+                    ] = edit_name.strip()
+
+                    st.session_state.transactions.loc[
+                        selected_edit_index, "Số tiền"
+                    ] = int(edit_amount)
+
+                    st.session_state.transactions.loc[
+                        selected_edit_index, "Ngày"
+                    ] = edit_date.strftime("%d/%m/%Y")
+
+                    st.session_state.transactions.loc[
+                        selected_edit_index, "Loại"
+                    ] = edit_type
+
+                    st.session_state.transactions.loc[
+                        selected_edit_index, "Danh mục"
+                    ] = edit_category
+
+                    st.success("Cập nhật giao dịch thành công!")
+                    st.rerun()
 
 elif selected_page == "AI Assistant":
     st.header("Trợ lý AI")
