@@ -137,15 +137,192 @@ if selected_page == "Dashboard":
             title="Chi tiêu theo danh mục"
         )
 
-    st.plotly_chart(fig_pie, use_container_width=True)
+        st.plotly_chart(fig_pie, width="stretch")
 
     st.subheader("Chào mừng bạn đến với ứng dụng!")
     st.info("Đây là Dashboard đầu tiên của AI Expense Assistant.")
 
-
 elif selected_page == "Transactions":
     st.header("Quản lý giao dịch")
-    st.write("Danh sách các giao dịch sẽ xuất hiện tại đây.")
+    st.caption("Theo dõi và quản lý các khoản thu chi của bạn.")
+
+    # 1. Khởi tạo dữ liệu giao dịch trong Session State
+    if "transactions" not in st.session_state:
+        st.session_state.transactions = pd.DataFrame({
+            "Ngày": [
+                "10/11/2026",
+                "09/11/2026",
+                "08/11/2026",
+                "07/11/2026",
+                "06/11/2026"
+            ],
+            "Tên giao dịch": [
+                "Ăn trưa",
+                "Tiền làm thêm",
+                "Mua sách",
+                "Đi xe bus",
+                "Xem phim"
+            ],
+            "Danh mục": [
+                "Ăn uống",
+                "Thu nhập",
+                "Học tập",
+                "Đi lại",
+                "Giải trí"
+            ],
+            "Loại": [
+                "Chi tiêu",
+                "Thu nhập",
+                "Chi tiêu",
+                "Chi tiêu",
+                "Chi tiêu"
+            ],
+            "Số tiền": [
+                35000,
+                1500000,
+                120000,
+                7000,
+                80000
+            ]
+        })
+
+    # 2. Form thêm giao dịch
+    with st.expander("➕ Thêm giao dịch mới", expanded=False):
+
+        with st.form("add_transaction_form"):
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+                transaction_name = st.text_input(
+                    "Tên giao dịch",
+                    placeholder="Ví dụ: Ăn sáng, mua sách..."
+                )
+
+                transaction_amount = st.number_input(
+                    "Số tiền (VND)",
+                    min_value=0,
+                    step=1000
+                )
+
+                transaction_date = st.date_input(
+                    "Ngày giao dịch",
+                    value=date.today()
+                )
+
+            with col2:
+                transaction_type = st.selectbox(
+                    "Loại giao dịch",
+                    ["Chi tiêu", "Thu nhập"]
+                )
+
+                transaction_category = st.selectbox(
+                    "Danh mục",
+                    [
+                        "Ăn uống",
+                        "Đi lại",
+                        "Học tập",
+                        "Giải trí",
+                        "Mua sắm",
+                        "Khác",
+                        "Thu nhập"
+                    ]
+                )
+
+            submitted = st.form_submit_button(
+                "Thêm giao dịch",
+                width="stretch"
+            )
+
+            if submitted:
+
+                if not transaction_name.strip():
+                    st.error("Vui lòng nhập tên giao dịch.")
+
+                elif transaction_amount <= 0:
+                    st.error("Số tiền phải lớn hơn 0.")
+
+                else:
+                    new_transaction = pd.DataFrame([{
+                        "Ngày": transaction_date.strftime("%d/%m/%Y"),
+                        "Tên giao dịch": transaction_name.strip(),
+                        "Danh mục": transaction_category,
+                        "Loại": transaction_type,
+                        "Số tiền": int(transaction_amount)
+                    }])
+
+                    st.session_state.transactions = pd.concat(
+                        [st.session_state.transactions, new_transaction],
+                        ignore_index=True
+                    )
+
+                    st.success("Thêm giao dịch thành công!")
+    # 3. Lấy dữ liệu giao dịch mới nhất
+    transaction_data = st.session_state.transactions.copy()
+
+    # 2. Tìm kiếm và lọc giao dịch
+    st.subheader("Lịch sử giao dịch")
+
+    filter_col1, filter_col2, filter_col3 = st.columns(3)
+
+    with filter_col1:
+        search_text = st.text_input(
+            "Tìm kiếm giao dịch",
+            placeholder="Nhập tên giao dịch..."
+        )
+
+    with filter_col2:
+        selected_type = st.selectbox(
+            "Loại giao dịch",
+            ["Tất cả", "Thu nhập", "Chi tiêu"]
+        )
+
+    with filter_col3:
+        categories = ["Tất cả"] + \
+            transaction_data["Danh mục"].unique().tolist()
+
+        selected_category = st.selectbox(
+            "Danh mục",
+            categories
+        )
+
+    # 3. Áp dụng bộ lọc
+    filtered_data = transaction_data.copy()
+
+    if search_text:
+        filtered_data = filtered_data[
+            filtered_data["Tên giao dịch"].str.contains(
+                search_text,
+                case=False,
+                na=False
+            )
+        ]
+
+    if selected_type != "Tất cả":
+        filtered_data = filtered_data[
+            filtered_data["Loại"] == selected_type
+        ]
+
+    if selected_category != "Tất cả":
+        filtered_data = filtered_data[
+            filtered_data["Danh mục"] == selected_category
+        ]
+
+    # 4. Định dạng dữ liệu để hiển thị
+    display_data = filtered_data.copy()
+
+    display_data["Số tiền"] = display_data["Số tiền"].map(
+        lambda amount: f"{amount:,.0f} đ".replace(",", ".")
+    )
+
+    # 5. Hiển thị kết quả
+    st.dataframe(
+        display_data,
+        width="stretch",
+        hide_index=True
+    )
+
+    st.caption(f"Tìm thấy {len(filtered_data)} giao dịch.")
 
 elif selected_page == "AI Assistant":
     st.header("Trợ lý AI")
