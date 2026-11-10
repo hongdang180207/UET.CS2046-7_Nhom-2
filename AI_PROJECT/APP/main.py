@@ -25,7 +25,7 @@ if __name__ == "__main__":
         print("\nKẾT QUẢ TRÍCH XUẤT:")
         for transaction in result.transactions:
             print("-------------------")
-            print("Số tiền:", transaction.amount)
+            print(f"Số tiền: {transaction.amount} vnd")
             print("Danh mục:", transaction.category)
             print("Loại:", transaction.type)
             print("Mô tả:", transaction.description)
