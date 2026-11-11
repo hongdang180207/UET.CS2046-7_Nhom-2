@@ -13,7 +13,7 @@ st.set_page_config(
 )
 
 # 2. Tiêu đề ứng dụng
-st.title("💰 AI Expense Assistant")
+st.title(" AI Expense Assistant")
 st.caption("Trợ lý quản lý chi tiêu thông minh dành cho sinh viên")
 
 # 3. Thanh điều hướng bên trái
