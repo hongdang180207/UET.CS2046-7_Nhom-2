@@ -1,3 +1,7 @@
 google-genai
 python-dotenv
 mysql-connector-python
+streamlit
+pandas
+numpy
+plotly
